@@ -1,0 +1,39 @@
+<!-- templates/base.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AMR Predictor</title>
+  <!-- Tailwind Play CDN (good for prototyping) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800">
+  <nav class="bg-white shadow-sm">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center">
+        <h1 class="font-semibold text-lg">AMR Predictor</h1>
+      </div>
+      <div>
+        <a href="{{ url_for('index') }}" class="text-sky-600 hover:underline">Home</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-5xl mx-auto mt-8 px-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="space-y-2 mb-4">
+          {% for category, msg in messages %}
+            <div class="p-3 rounded {{ 'bg-red-100 text-red-800' if category=='danger' else 'bg-green-100 text-green-800' }}">
+              {{ msg }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

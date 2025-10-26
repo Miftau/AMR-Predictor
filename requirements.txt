@@ -1,0 +1,40 @@
+# Core
+flask
+flask-cors
+python-dotenv
+
+# ML / Data
+numpy
+pandas
+scikit-learn
+xgboost
+imbalanced-learn
+joblib
+lightgbm
+tensorflow
+keras
+
+# Visualization & explanation
+matplotlib
+seaborn
+plotly
+shap
+
+# Bioinformatics utilities
+biopython
+
+
+# Opt / hyperparam
+optuna
+
+# Web app extras
+flask-wtf
+flask-login
+sqlalchemy
+
+# Deploy/run
+gunicorn
+waitress  # Windows-friendly WSGI server
+
+# (Optional) if you plan PostgreSQL locally
+psycopg2-binary
