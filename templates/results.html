@@ -1,36 +1,19 @@
-<!-- templates/results.html -->
 {% extends "base.html" %}
+{% block title %}Results | AMR Predictor{% endblock %}
 {% block content %}
-<div class="bg-white p-6 rounded shadow">
-  <h2 class="text-xl font-semibold mb-4">Prediction Result</h2>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div>
-      <h3 class="font-medium">Input</h3>
-      <pre class="bg-slate-100 p-3 rounded">{{ result.input | tojson(indent=2) }}</pre>
-    </div>
+<h1 class="text-2xl font-bold mb-4">Prediction Results</h1>
 
-    <div>
-      <h3 class="font-medium">Predictions</h3>
-      <table class="w-full text-left">
-        <tr><th class="py-1">Model</th><th>Drug Class</th><th>Mechanism</th></tr>
-        <tr>
-          <td class="py-1">RandomForest</td>
-          <td>{{ result.rf_drug_pred }}</td>
-          <td>{{ result.rf_mech_pred }}</td>
-        </tr>
-        <tr>
-          <td class="py-1">DeepNet</td>
-          <td>{{ result.deep_drug_pred }}</td>
-          <td>{{ result.deep_mech_pred }}</td>
-        </tr>
-      </table>
-    </div>
-  </div>
+<div class="bg-white p-6 rounded-xl shadow-md overflow-x-auto">
+  {% for table in tables %}
+  {{ table|safe }}
+  {% endfor %}
+</div>
 
-  <div class="mt-6">
-    <a href="{{ url_for('explain', sample_id=sample_id) }}" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Explain this prediction (SHAP)</a>
-    <a href="{{ url_for('index') }}" class="ml-3 text-sky-600 hover:underline">Back</a>
-  </div>
+<div class="mt-4 flex gap-4">
+  <a href="{{ url_for('index') }}" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">← Back</a>
+  {% if filename %}
+  <a href="{{ url_for('download_file', name=filename) }}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Download CSV</a>
+  {% endif %}
 </div>
 {% endblock %}

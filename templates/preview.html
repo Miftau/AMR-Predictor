@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Preview | AMR Predictor{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-bold mb-4">Preview Uploaded File</h1>
+
+<div class="bg-white p-6 rounded-xl shadow-md">
+  <form method="POST" action="{{ url_for('predict_file') }}">
+    <input type="hidden" name="filename" value="{{ filename }}" />
+    <p class="text-gray-700 mb-2 font-semibold">Select columns to include for text-based prediction:</p>
+    <div class="grid md:grid-cols-3 gap-3 mb-4">
+      {% for col in columns %}
+      <label class="flex items-center space-x-2">
+        <input type="checkbox" name="selected_columns" value="{{ col }}" class="rounded border-gray-300" />
+        <span>{{ col }}</span>
+      </label>
+      {% endfor %}
+    </div>
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Run Prediction</button>
+  </form>
+</div>
+
+<div class="mt-6 bg-gray-100 p-4 rounded-lg overflow-x-auto">
+  <h2 class="font-semibold mb-2">Data Preview</h2>
+  {{ preview|safe }}
+</div>
+{% endblock %}

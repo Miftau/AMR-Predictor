@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | AMR Predictor{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-bold mb-4">Model Dashboard</h1>
+
+<div class="bg-white p-6 rounded-xl shadow-md">
+  <h2 class="font-semibold mb-2">Model Performance Metrics</h2>
+  {{ metrics_html|safe }}
+</div>
+
+{% if plots %}
+<div class="mt-6 grid md:grid-cols-2 gap-6">
+  {% for p in plots %}
+  <div class="bg-white rounded-xl p-4 shadow-md">
+    <img src="{{ url_for('static', filename='images/' + p) }}" alt="Plot" class="rounded-lg" />
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-gray-600 mt-4">No plots available yet.</p>
+{% endif %}
+
+{% endblock %}

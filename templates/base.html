@@ -1,39 +1,96 @@
-<!-- templates/base.html -->
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AMR Predictor</title>
-  <!-- Tailwind Play CDN (good for prototyping) -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}AMR Predictor{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom animation for content fade-in */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in {
+      animation: fadeIn 0.5s ease-out;
+    }
+  </style>
 </head>
-<body class="bg-slate-50 text-slate-800">
-  <nav class="bg-white shadow-sm">
-    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center">
-        <h1 class="font-semibold text-lg">AMR Predictor</h1>
+<body class="bg-gradient-to-br from-indigo-300 via-purple-500 to-pink-400 text-gray-800 font-sans antialiased flex flex-col min-h-screen">
+  <!-- Sticky Navigation Bar -->
+  <nav class="bg-gradient-to-r from-gray-900 to-gray-800 text-white p-4 shadow-lg sticky top-0 z-50">
+    <div class="container mx-auto flex justify-between items-center">
+      <a href="{{ url_for('index') }}" class="font-bold text-2xl flex items-center space-x-2">
+        <span>🧬</span>
+        <span>AMR Predictor</span>
+      </a>
+      <div class="hidden md:flex space-x-6">
+        <a href="{{ url_for('index') }}" class="hover:text-gray-300 text-xl transition duration-300 ease-in-out">Home</a>
+        <a href="{{ url_for('dashboard') }}" class="hover:text-gray-300 text-xl transition duration-300 ease-in-out">Dashboard</a>
       </div>
-      <div>
-        <a href="{{ url_for('index') }}" class="text-sky-600 hover:underline">Home</a>
-      </div>
+      <!-- Hamburger Menu for Mobile -->
+      <button id="menu-toggle" class="md:hidden text-white focus:outline-none" aria-label="Toggle navigation">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
+    </div>
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="hidden md:hidden bg-gray-800 text-white p-4">
+      <a href="{{ url_for('index') }}" class="block py-2 hover:text-gray-300 transition duration-300">Home</a>
+      <a href="{{ url_for('dashboard') }}" class="block py-2 hover:text-gray-300 transition duration-300">Dashboard</a>
     </div>
   </nav>
 
-  <main class="max-w-5xl mx-auto mt-8 px-4">
+  <!-- Main Content -->
+  <main class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-5xl flex-grow">
+    <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
-        <div class="space-y-2 mb-4">
-          {% for category, msg in messages %}
-            <div class="p-3 rounded {{ 'bg-red-100 text-red-800' if category=='danger' else 'bg-green-100 text-green-800' }}">
-              {{ msg }}
+        <div class="mb-6 space-y-3">
+          {% for category, message in messages %}
+            <div class="p-4 rounded-lg shadow-md flex justify-between items-center fade-in
+                        {% if category == 'success' %}bg-green-100 text-green-800 border-l-4 border-green-500
+                        {% elif category == 'danger' %}bg-red-100 text-red-800 border-l-4 border-red-500
+                        {% elif category == 'warning' %}bg-yellow-100 text-yellow-800 border-l-4 border-yellow-500
+                        {% else %}bg-blue-100 text-blue-800 border-l-4 border-blue-500{% endif %}">
+              <span>{{ message }}</span>
+              <button class="text-gray-600 hover:text-gray-800 focus:outline-none" onclick="this.parentElement.remove()" aria-label="Dismiss message">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
             </div>
           {% endfor %}
         </div>
       {% endif %}
     {% endwith %}
 
-    {% block content %}{% endblock %}
+    <!-- Content Block with Gradient Background -->
+    <div class="bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6 rounded-lg shadow-md fade-in">
+      {% block content %}{% endblock %}
+    </div>
   </main>
+
+  <!-- Footer -->
+  <footer class="bg-gradient-to-r from-gray-900 to-gray-800 text-gray-300 text-center py-4 text-sm mt-auto">
+    <div class="container mx-auto">
+      <p>© 2025 AMR Predictor – Developed by YUSUF BABATUNDE MUFTAUDEEN (Dev. Progress)</p>
+      <div class="mt-2 space-x-4">
+        <a href="#" class="hover:text-white transition duration-300">Contact</a>
+        <a href="#" class="hover:text-white transition duration-300">Privacy Policy</a>
+        <a href="#" class="hover:text-white transition duration-300">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript for Hamburger Menu -->
+  <script>
+    const menuToggle = document.getElementById('menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+    menuToggle.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+  </script>
 </body>
 </html>

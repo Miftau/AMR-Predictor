@@ -1,35 +1,28 @@
-<!-- templates/index.html -->
 {% extends "base.html" %}
+{% block title %}Home | AMR Predictor{% endblock %}
+
 {% block content %}
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-  <!-- Manual input -->
-  <div class="bg-white p-6 rounded shadow">
-    <h2 class="text-xl font-semibold mb-4">Manual Prediction</h2>
-    <form action="{{ url_for('predict') }}" method="post">
-      <label class="block mb-2">Model Name</label>
-      <input name="model_name" class="w-full p-2 border rounded mb-3" placeholder="e.g., blaTEM-1" />
+<h1 class="text-2xl font-bold mb-4">Predict Antimicrobial Resistance (AMR)</h1>
 
-      <label class="block mb-2">ARO Name</label>
-      <input name="aro_name" class="w-full p-2 border rounded mb-3" placeholder="e.g., Beta-lactamase TEM-1" />
-
-      <label class="block mb-2">AMR Gene Family</label>
-      <input name="amr_family" class="w-full p-2 border rounded mb-3" placeholder="e.g., Beta-lactamase" />
-
-      <label class="block mb-2">CARD Short Name</label>
-      <input name="card_short_name" class="w-full p-2 border rounded mb-3" placeholder="e.g., TEM-1" />
-
-      <button type="submit" class="w-full bg-sky-600 text-white py-2 rounded hover:bg-sky-700">Predict</button>
+<div class="grid md:grid-cols-2 gap-6">
+  <!-- Manual Input -->
+  <div class="bg-white p-6 rounded-xl shadow-md">
+    <h2 class="text-lg font-semibold mb-2">Manual Input</h2>
+    <form method="POST" action="{{ url_for('predict') }}" class="space-y-3">
+      <input name="model_name" placeholder="Model Name" class="w-full border p-2 rounded" />
+      <input name="aro_name" placeholder="ARO Name" class="w-full border p-2 rounded" />
+      <input name="amr_family" placeholder="AMR Gene Family" class="w-full border p-2 rounded" />
+      <input name="card_short_name" placeholder="CARD Short Name" class="w-full border p-2 rounded" />
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Predict</button>
     </form>
   </div>
 
-  <!-- CSV upload -->
-  <div class="bg-white p-6 rounded shadow">
-    <h2 class="text-xl font-semibold mb-4">Batch Prediction (CSV / TSV)</h2>
-    <p class="text-sm text-slate-600 mb-3">Upload a CSV or TSV file containing at least one of these columns: <code>Model Name</code>, <code>ARO Name</code>, <code>AMR Gene Family</code>, <code>CARD Short Name</code>.</p>
-
-    <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
-      <input type="file" name="file" class="mb-3" />
-      <button type="submit" class="w-full bg-emerald-600 text-white py-2 rounded hover:bg-emerald-700">Upload & Predict</button>
+  <!-- File Upload -->
+  <div class="bg-white p-6 rounded-xl shadow-md">
+    <h2 class="text-lg font-semibold mb-2">Upload Dataset</h2>
+    <form method="POST" action="{{ url_for('preview') }}" enctype="multipart/form-data" class="space-y-3">
+      <input type="file" name="file" accept=".csv,.tsv,.txt" class="w-full border p-2 rounded" />
+      <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Preview File</button>
     </form>
   </div>
 </div>
