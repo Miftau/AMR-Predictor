@@ -1,0 +1,11 @@
+model_name,aro_name,amr_family,card_short_name,resistance_class
+OXA-1 beta-lactamase,Beta-lactam resistance protein,Beta-lactamase family,BLA_OXA-1,Resistant
+TEM-1 beta-lactamase,Beta-lactam resistance protein,Beta-lactamase family,BLA_TEM-1,Resistant
+AAC(6’)-Ib, Aminoglycoside acetyltransferase,Aminoglycoside-modifying enzyme family,AAC_6_Ib,Resistant
+MecA, Penicillin-binding protein,Penicillin resistance family,PBP_MecA,Resistant
+VanA, D-Ala-D-Lac ligase,Vancomycin resistance family,VAN_A,Resistant
+TetM, Ribosomal protection protein,Tetracycline resistance family,TET_M,Susceptible
+ErmB, rRNA methyltransferase,Macrolide resistance family,ERM_B,Susceptible
+Sul1, Dihydropteroate synthase,Sulfonamide resistance family,SUL_1,Susceptible
+QnrS, DNA gyrase protection protein,Quinolone resistance family,QNR_S,Susceptible
+CatA1, Chloramphenicol acetyltransferase,Chloramphenicol resistance family,CAT_A1,Resistant

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Batch Prediction Results</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen p-6">
+  <div class="max-w-7xl mx-auto bg-white shadow-md rounded-lg p-6">
+    <h2 class="text-2xl font-bold mb-6 text-gray-800">Batch Prediction Results</h2>
+    
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead>
+          <tr>
+            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Index</th>
+            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Input Summary</th>
+            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Drug Prediction</th>
+            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Mechanism Prediction</th>
+            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          {% for i in range(0, 10) %}
+          <tr>
+            <td class="px-4 py-2">{{ i }}</td>
+            <td class="px-4 py-2">{{ loop.index0 }}</td>
+            <td class="px-4 py-2">{{ "Drug" }}</td>
+            <td class="px-4 py-2">{{ "Mechanism" }}</td>
+            <td class="px-4 py-2">
+              <a href="{{ url_for('explain_batch', batch_id=batch_id, row_index=i) }}"
+                 class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">Explain</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-6 flex space-x-4">
+      <a href="{{ url_for('index') }}" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">Back</a>
+      <a href="{{ url_for('download_file', name=filename) }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Download Full CSV</a>
+    </div>
+  </div>
+</body>
+</html>

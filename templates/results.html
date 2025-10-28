@@ -15,5 +15,14 @@
   {% if filename %}
   <a href="{{ url_for('download_file', name=filename) }}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Download CSV</a>
   {% endif %}
+  {% if sample_id %}
+  <a href="{{ url_for('explain', sample_id=sample_id) }}" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+      Explain Prediction
+  </a>
+  {% endif %}
+  {% if shap_summary %}
+    <h3 class="text-lg font-semibold mt-4">SHAP Explanation</h3>
+    <img src="{{ url_for('static', filename='shap/' + shap_summary) }}" class="rounded-lg shadow mt-2"/>
+  {% endif %}
 </div>
 {% endblock %}

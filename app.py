@@ -3,6 +3,7 @@ import os
 import uuid
 import joblib
 import shap
+import shap.maskers
 import numpy as np
 import pandas as pd
 import matplotlib
@@ -34,6 +35,7 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # Load pre-trained models
 MODELS = load_models()
+
 
 
 # --- Helpers ---
@@ -98,35 +100,94 @@ def preview():
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    """Perform predictions on uploaded file after column mapping."""
+    """Perform predictions on uploaded file or manual input, and provide SHAP explanations."""
     filename = request.form.get("filename")
     col_selection = request.form.getlist("selected_columns")
+    manual_text = request.form.get("manual_text")
 
-    if not filename or not col_selection:
-        flash("Please select at least one column.", "danger")
+    # Handle file-based batch predictions
+    if filename:
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        sep = "\t" if filename.endswith(".tsv") or filename.endswith(".txt") else ","
+        df = pd.read_csv(file_path, sep=sep, engine="python")
+
+        if not col_selection:
+            flash("Please select at least one column.", "danger")
+            return redirect(url_for("index"))
+
+        # Combine selected columns
+        df["combined_text"] = df[col_selection].astype(str).apply(lambda x: " ".join(x), axis=1)
+        text_data = df["combined_text"]
+
+    # Handle manual input
+    elif manual_text:
+        text_data = [manual_text]
+        df = pd.DataFrame({"combined_text": text_data})
+
+    else:
+        flash("Please provide input data (either upload file or manual text).", "danger")
         return redirect(url_for("index"))
 
-    file_path = os.path.join(UPLOAD_FOLDER, filename)
-    sep = "\t" if filename.endswith(".tsv") or filename.endswith(".txt") else ","
-    df = pd.read_csv(file_path, sep=sep, engine="python")
-
-    # Combine selected columns
-    df["combined_text"] = df[col_selection].astype(str).apply(lambda x: " ".join(x), axis=1)
-
+    # Load vectorizer and models
     vectorizer = MODELS.get("vectorizer")
-    X_vec = vectorizer.transform(df["combined_text"])
+    X_vec = vectorizer.transform(text_data)
     preds = predict_all(MODELS, X_vec)
 
-    # Append predictions
+    # Attach predictions to DataFrame
     for k, v in preds.items():
         df[k] = v
 
-    output_path = os.path.join(UPLOAD_FOLDER, f"predicted_{filename}")
+    # Generate SHAP explanations
+    try:
+        # Pick best available model for explanation
+        model = MODELS.get("rf_drug") or MODELS.get("deep")
+        vectorizer = MODELS.get("vectorizer")
+
+        if model is None or vectorizer is None:
+            print("⚠️ No model or vectorizer available for SHAP explanations.")
+            shap_summary_path = None
+        else:
+            # Prepare input data
+            X_sample = X_vec[:50]
+            if issparse(X_sample):
+                X_sample = X_sample.toarray()
+
+            # Choose correct SHAP explainer
+            if "forest" in str(type(model)).lower() or "tree" in str(type(model)).lower():
+                explainer = shap.TreeExplainer(model)
+            elif hasattr(model, "predict_proba"):
+                explainer = shap.Explainer(model.predict_proba, X_sample)
+            else:
+                explainer = shap.Explainer(model.predict, X_sample)
+
+            shap_values = explainer(X_sample)
+
+            # Generate a summary plot
+            shap_dir = os.path.join("static", "shap")
+            os.makedirs(shap_dir, exist_ok=True)
+            shap_summary_filename = f"shap_summary_{uuid.uuid4().hex}.png"
+            shap_summary_path = os.path.join(shap_dir, shap_summary_filename)
+
+            plt.figure(figsize=(8, 5))
+            shap.summary_plot(shap_values, feature_names=getattr(vectorizer, "get_feature_names_out", lambda: None)(), show=False)
+            plt.tight_layout()
+            plt.savefig(shap_summary_path, bbox_inches="tight", dpi=200)
+            plt.close()
+    except Exception as e:
+        print("❌ SHAP generation failed:", e)
+        shap_summary_path = None
+
+    # Save batch prediction results
+    output_path = os.path.join(UPLOAD_FOLDER, f"predicted_{filename or 'manual_input.csv'}")
     df.to_csv(output_path, index=False)
 
-    flash("Predictions generated successfully!", "success")
-    return render_template("results.html", tables=[df.head(20).to_html(classes="table-auto text-xs w-full")],
-            filename=os.path.basename(output_path))
+    flash("Predictions and explanations generated successfully!", "success")
+    return render_template(
+        "results.html",
+        tables=[df.head(20).to_html(classes="table-auto text-xs w-full")],
+        filename=os.path.basename(output_path),
+        shap_summary=os.path.basename(shap_summary_path)
+    )
 
 
 @app.route("/dashboard")
@@ -184,6 +245,66 @@ def explain(sample_id):
     plot_html = fig.to_html(full_html=False)
 
     return render_template('explain.html', plot_html=plot_html, sample_id=sample_id)
+
+@app.route("/explain_batch/<batch_id>/<int:row_index>", methods=["GET"])
+def explain_batch(batch_id, row_index):
+    import pandas as pd
+    batch_path = os.path.join(STATIC_IMG, f"batch_{batch_id}.pkl")
+    if not os.path.exists(batch_path):
+        flash("Batch file not found for explanation.", "danger")
+        return redirect(url_for("index"))
+    
+    df = pd.read_pickle(batch_path)
+    if row_index >= len(df):
+        flash("Invalid row index for SHAP explanation.", "danger")
+        return redirect(url_for("index"))
+    
+    # Get the text used for prediction
+    combined = df.iloc[row_index]['combined_text']
+    vectorizer = MODELS.get('vectorizer')
+    rf_drug = MODELS.get('rf_drug')
+
+    if vectorizer is None or rf_drug is None:
+        flash("Model or vectorizer missing for explanation.", "danger")
+        return redirect(url_for("index"))
+
+    x_vec = vectorizer.transform([combined])
+
+    try:
+        explainer = shap.TreeExplainer(rf_drug)
+        X_for_shap = x_vec.toarray() if issparse(x_vec) else x_vec
+        shap_exp = explainer(X_for_shap)
+
+        # Determine predicted class index
+        pred_idx = rf_drug.predict(x_vec)[0]
+        if shap_exp.values.ndim == 3:
+            single_vals = shap_exp.values[0, pred_idx, :]
+            single_base = shap_exp.base_values[0, pred_idx]
+        else:
+            single_vals = shap_exp.values[0, :]
+            single_base = shap_exp.base_values[0]
+
+        explanation = shap.Explanation(
+            values=single_vals,
+            base_values=single_base,
+            data=X_for_shap[0],
+            feature_names=vectorizer.get_feature_names_out()
+        )
+
+        img_name = f"shap_batch_{batch_id}_{row_index}.png"
+        img_path = os.path.join(STATIC_IMG, img_name)
+        plt.figure(figsize=(8,5))
+        shap.plots.waterfall(explanation, show=False)
+        plt.savefig(img_path, bbox_inches="tight", dpi=200)
+        plt.close()
+
+        return render_template("explain.html", sample_text=combined, image_file=img_name)
+
+    except Exception as e:
+        print("SHAP batch explanation error:", e)
+        flash("Failed to generate SHAP explanation for this row.", "danger")
+        return redirect(url_for("index"))
+
 
 @app.route("/downloads/<name>")
 def download_file(name):
