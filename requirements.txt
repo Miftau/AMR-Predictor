@@ -31,6 +31,8 @@ optuna
 flask-wtf
 flask-login
 sqlalchemy
+Flask-Mail 
+python-dotenv
 
 # Deploy/run
 gunicorn

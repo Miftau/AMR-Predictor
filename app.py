@@ -1,4 +1,5 @@
 # app.py (Enhanced)
+import datetime
 import os
 import uuid
 import joblib
@@ -15,10 +16,14 @@ from flask import (
     Flask, render_template, request, redirect, url_for, flash,
     send_from_directory, jsonify
 )
+from flask_mail import Mail, Message       
 from model_utils import load_models, make_combined_text, vectorize_input, predict_all
 from scipy.sparse import issparse
 from sklearn.metrics import classification_report, confusion_matrix
 import seaborn as sns
+from dotenv import load_dotenv  
+
+load_dotenv()  # Load environment variables from .env file
 
 # --- Configuration ---
 UPLOAD_FOLDER = "uploads"
@@ -32,6 +37,21 @@ os.makedirs("models", exist_ok=True)
 app = Flask(__name__)
 app.secret_key = "supersecret"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+# === Flask-Mail Configuration ===
+app.config["MAIL_SERVER"] = "smtp.gmail.com"
+app.config["MAIL_PORT"] = 587
+app.config["MAIL_USE_TLS"] = True
+app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+app.config["MAIL_DEFAULT_SENDER"] = ("AMR Predictor Contact", os.getenv("MAIL_USERNAME"))
+
+mail = Mail(app)
+
+@app.context_processor
+def inject_now():
+    """Add current year to all templates."""
+    return {"current_year": datetime.datetime.now().year}
 
 # Load pre-trained models
 MODELS = load_models()
@@ -59,9 +79,53 @@ def generate_confusion_plot(y_true, y_pred, title, save_path):
 # --- Routes ---
 
 @app.route("/")
-def index():
-    """Homepage with upload and manual entry options."""
-    return render_template("index.html")
+def home():
+    """Homepage"""
+    return render_template("home.html")
+
+@app.route("/about")
+def about():
+    """About page"""
+    return render_template("about.html")
+
+@app.route("/contact", methods=["GET", "POST"])
+def contact():
+    if request.method == "POST":
+        name = request.form.get("name")
+        email = request.form.get("email")
+        message = request.form.get("message")
+
+        if not name or not email or not message:
+            flash("Please fill in all fields.", "danger")
+            return redirect(url_for("contact"))
+
+        try:
+            msg = Message(
+                subject=f"New Contact Form Message from {name}",
+                recipients=[os.getenv("MAIL_DEFAULT_RECEIVER")],
+                body=f"""
+                You have received a new message from your website contact form.
+
+                Name: {name}
+                Email: {email}
+
+                Message:
+                {message}
+                """
+            )
+            mail.send(msg)
+            flash("Your message has been sent successfully!", "success")
+        except Exception as e:
+            flash(f"Error sending message: {str(e)}", "danger")
+
+        return redirect(url_for("contact"))
+
+    return render_template("contact.html")
+
+@app.route("/form")
+def form():
+    """Upload or prediction form"""
+    return render_template("form.html")
 
 
 @app.route("/preview", methods=["POST"])
